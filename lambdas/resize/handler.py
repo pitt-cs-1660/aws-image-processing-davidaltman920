@@ -52,20 +52,20 @@ def resize_handler(event, context):
                     #
                     ######
 
+                    # download image from S3
                     image = download_from_s3(bucket_name, object_key)
+                    print(f"Downloaded image: {image.size}")
 
-                    sizes = {
-                        'thumbnail': (150, 150),
-                        'medium': (800, 800)
-                    }
+                    # resize image to 512x512
+                    resized_image = image.resize((512, 512), Image.Resampling.LANCZOS)
+                    print(f"Resized to: {resized_image.size}")
 
-                    for label, (width, height) in sizes.items():
-                        resized = image.copy()
-                        resized.thumbnail((width, height))
-                        filename = Path(object_key).name
-                        new_key = f"resized/{label}/{filename}"
-                        upload_to_s3(bucket_name, new_key, resized)
-                        print(f"Uploaded resized image to s3://{bucket_name}/{new_key}")
+                    # upload processed image to /processed/resize/
+                    from pathlib import Path
+                    filename = Path(object_key).name
+                    output_key = f"processed/resize/{filename}"
+                    upload_to_s3(bucket_name, output_key, resized_image)
+                    print(f"Uploaded to: {output_key}")
 
                     processed_count += 1
 
