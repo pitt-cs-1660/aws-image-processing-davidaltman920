@@ -52,6 +52,19 @@ def greyscale_handler(event, context):
                     #
                     ######
 
+                    image = download_from_s3(bucket_name, object_key)
+                    print("Image downloaded successfully")
+
+                    greyscale_image = image.convert('L')  
+                    print("Image converted to greyscale")
+
+                    filename = Path(object_key).name
+                    greyscale_key = f"greyscale/{filename}"
+
+                    upload_to_s3(bucket_name, greyscale_key, greyscale_image)
+                    print(f"Greyscale image uploaded to s3://{bucket_name}/{greyscale_key}")
+
+
                     processed_count += 1
 
                 except Exception as e:

@@ -52,6 +52,21 @@ def resize_handler(event, context):
                     #
                     ######
 
+                    image = download_from_s3(bucket_name, object_key)
+
+                    sizes = {
+                        'thumbnail': (150, 150),
+                        'medium': (800, 800)
+                    }
+
+                    for label, (width, height) in sizes.items():
+                        resized = image.copy()
+                        resized.thumbnail((width, height))
+                        filename = Path(object_key).name
+                        new_key = f"resized/{label}/{filename}"
+                        upload_to_s3(bucket_name, new_key, resized)
+                        print(f"Uploaded resized image to s3://{bucket_name}/{new_key}")
+
                     processed_count += 1
 
                 except Exception as e:

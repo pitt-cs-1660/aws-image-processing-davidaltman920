@@ -52,6 +52,31 @@ def exif_handler(event, context):
                     #
                     ######
 
+                    image = download_from_s3(bucket_name, object_key)
+                    print("Image downloaded successfully")
+
+                    exif_data = image.getexif()
+                    if not exif_data:
+                        print("No EXIF metadata found.")
+                        exif_json = {}
+                    else:
+                        # Convert EXIF data to readable dict
+                        readable_exif = {}
+                        for tag, value in exif_data.items():
+                            tag_name = Image.ExifTags.TAGS.get(tag, tag)
+                            readable_exif[tag_name] = str(value)
+                        exif_json = readable_exif
+                        print(f"Extracted {len(exif_json)} EXIF tags")
+
+                    json_bytes = json.dumps(exif_json, indent=2).encode('utf-8')
+
+                    filename = Path(object_key).name
+                    metadata_key = f"metadata/{filename}.json"
+
+                    upload_to_s3(bucket_name, metadata_key, json_bytes, content_type='application/json')
+                    print(f"Uploaded metadata to s3://{bucket_name}/{metadata_key}")
+
+
                     processed_count += 1
 
                 except Exception as e:
