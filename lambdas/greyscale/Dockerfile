@@ -1,30 +1,22 @@
 FROM public.ecr.aws/lambda/python:3.13
 
-# install uv
+# install uv (Python package manager)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-############
-# Install dependencies and configure Lambda runtime
-############
-
-# Set working directory to AWS Lambda task root
+# Set working directory
 WORKDIR ${LAMBDA_TASK_ROOT}
 
-# Copy dependency file (if exists) and code
-# If you don’t have requirements.txt, you can skip this copy
-COPY requirements.txt ./
+# Copy dependency file if exists
+COPY pyproject.toml ./
 
-# Install dependencies using uv (fast Python package manager)
-# Pillow = image library, boto3 = AWS SDK
-RUN if [ -f requirements.txt ]; then \
-        uv pip install --no-cache-dir -r requirements.txt; \
-    else \
-        uv pip install --no-cache-dir pillow boto3; \
-    fi
+RUN uv sync --no-install-project --no-editable
 
-# Copy the rest of your application code
-COPY . .
+COPY handler.py ./
 
-# Set the Lambda handler (module.function_name)
-# Assuming your Python file is named greyscale_handler.py
-CMD ["greyscale_handler.greyscale_handler"]
+RUN uv sync --no-editable
+
+# set PYTHONPATH to include the virtual environment site-packages
+ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/.venv/lib/python3.13/site-packages"
+
+# Set Lambda handler (filename.function_name)
+CMD ["handler.greyscale_handler"]

@@ -7,17 +7,16 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR ${LAMBDA_TASK_ROOT}
 
 # Copy dependency file if exists
-COPY requirements.txt ./
+COPY pyproject.toml ./
 
-# Use uv to install dependencies (fast & layer-cached)
-RUN if [ -f requirements.txt ]; then \
-        uv pip install --system --no-cache -r requirements.txt; \
-    else \
-        uv pip install --system --no-cache pillow boto3; \
-    fi
+RUN uv sync --no-install-project --no-editable
 
-# Copy all Lambda function code
-COPY . .
+COPY handler.py ./
+
+RUN uv sync --no-editable
+
+# set PYTHONPATH to include the virtual environment site-packages
+ENV PYTHONPATH="${LAMBDA_TASK_ROOT}/.venv/lib/python3.13/site-packages"
 
 # Set Lambda handler (filename.function_name)
-CMD ["resize_handler.resize_handler"]
+CMD ["handler.resize_handler"]
