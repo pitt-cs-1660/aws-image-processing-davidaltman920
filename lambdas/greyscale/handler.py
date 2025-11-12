@@ -45,12 +45,7 @@ def greyscale_handler(event, context):
                     object_key = s3_record['object']['key']
 
                     print(f"Processing: s3://{bucket_name}/{object_key}")
-
-                    ######
-                    #
-                    #  TODO: add greyscale lambda code here
-                    #
-                    ######
+                    
                     # download image from S3
                     image = download_from_s3(bucket_name, object_key)
                     print(f"Downloaded image: {image.mode}")
